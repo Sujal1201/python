@@ -1,11 +1,14 @@
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     loadPyodide: any;
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let pyodideInstance: any = null;
 let isLoading = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let loadPromise: Promise<any> | null = null;
 
 export async function loadPyodide() {
@@ -75,11 +78,12 @@ export async function runPythonCode(code: string): Promise<ExecutionResult> {
       if (errorOutput) {
         error = errorOutput;
       }
-    } catch (err: any) {
-      error = err.message || String(err);
+    } catch (err: unknown) {
+      error = err instanceof Error ? err.message : String(err);
     }
-  } catch (err: any) {
-    error = `Failed to initialize Python: ${err.message}`;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    error = `Failed to initialize Python: ${message}`;
   }
 
   const executionTime = performance.now() - startTime;
@@ -89,7 +93,9 @@ export async function runPythonCode(code: string): Promise<ExecutionResult> {
 
 export async function validateExercise(
   code: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   testCases: any[]
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<{ passed: boolean; feedback: string; results: any[] }> {
   const results = [];
   let allPassed = true;
@@ -118,11 +124,12 @@ export async function validateExercise(
           });
 
           if (!passed) allPassed = false;
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
           results.push({
             passed: false,
             expected: testCase.expected_output,
-            error: err.message,
+            error: errorMessage,
           });
           allPassed = false;
         }
@@ -148,9 +155,10 @@ export async function validateExercise(
           await pyodide.runPythonAsync(code);
 
           let allVarsCorrect = true;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const varResults: any = {};
 
-          for (const [varName, expectedType] of Object.entries(testCase.check_variables)) {
+          for (const [varName, expectedType] of Object.entries(testCase.check_variables as Record<string, string>)) {
             try {
               const varValue = pyodide.globals.get(varName);
               const actualType = typeof varValue === 'number'
@@ -175,10 +183,11 @@ export async function validateExercise(
           });
 
           if (!allVarsCorrect) allPassed = false;
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
           results.push({
             passed: false,
-            error: err.message,
+            error: errorMessage,
           });
           allPassed = false;
         }
@@ -190,10 +199,11 @@ export async function validateExercise(
       : 'Some tests failed. Check the results below.';
 
     return { passed: allPassed, feedback, results };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     return {
       passed: false,
-      feedback: `Error running tests: ${err.message}`,
+      feedback: `Error running tests: ${errorMessage}`,
       results,
     };
   }
