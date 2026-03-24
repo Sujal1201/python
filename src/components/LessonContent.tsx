@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Clock, BookOpen, ChevronRight } from 'lucide-react';
 import type { Lesson, Exercise } from '../lib/database.types';
 import ExerciseView from './ExerciseView';
-import CodeEditor from './CodeEditor';
 
 interface LessonContentProps {
   lesson: Lesson;

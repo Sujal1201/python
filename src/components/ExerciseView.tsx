@@ -11,7 +11,8 @@ interface ExerciseViewProps {
 export default function ExerciseView({ exercise, onComplete }: ExerciseViewProps) {
   const [code, setCode] = useState(exercise.starter_code);
   const [isValidating, setIsValidating] = useState(false);
-  const [validationResult, setValidationResult] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [validationResult, setValidationResult] = useState<{ passed: boolean; feedback: string; results: any[] } | null>(null);
   const [showHints, setShowHints] = useState(false);
   const [hintsRevealed, setHintsRevealed] = useState<number>(0);
 
@@ -20,7 +21,7 @@ export default function ExerciseView({ exercise, onComplete }: ExerciseViewProps
     setValidationResult(null);
     setShowHints(false);
     setHintsRevealed(0);
-  }, [exercise.id]);
+  }, [exercise.id, exercise.starter_code]);
 
   const hints = Array.isArray(exercise.hints) ? exercise.hints : [];
 
@@ -36,10 +37,11 @@ export default function ExerciseView({ exercise, onComplete }: ExerciseViewProps
       if (result.passed && onComplete) {
         onComplete();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setValidationResult({
         passed: false,
-        feedback: `Error: ${error.message}`,
+        feedback: `Error: ${errorMessage}`,
         results: [],
       });
     } finally {
@@ -86,7 +88,7 @@ export default function ExerciseView({ exercise, onComplete }: ExerciseViewProps
                 {hints.slice(0, hintsRevealed + 1).map((hint, index) => (
                   <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <p className="text-sm text-blue-900">
-                      <span className="font-medium">Hint {index + 1}:</span> {hint}
+                      <span className="font-medium">Hint {index + 1}:</span> {String(hint)}
                     </p>
                   </div>
                 ))}
@@ -140,7 +142,7 @@ export default function ExerciseView({ exercise, onComplete }: ExerciseViewProps
                     </p>
                     {validationResult.results && validationResult.results.length > 0 && (
                       <div className="mt-2 space-y-1">
-                        {validationResult.results.map((result: any, index: number) => (
+                        {validationResult.results.map((result: { passed: boolean; expected?: string; actual?: string; error?: string }, index: number) => (
                           <div key={index} className="text-sm">
                             {result.passed ? (
                               <span className="text-green-700">Test {index + 1}: Passed</span>

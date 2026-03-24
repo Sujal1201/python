@@ -29,10 +29,11 @@ export default function CodeEditor({ initialCode = '', onCodeChange, readOnly = 
     try {
       const result = await runPythonCode(code);
       setOutput(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setOutput({
         output: '',
-        error: error.message || 'An error occurred',
+        error: errorMessage,
         executionTime: 0,
       });
     } finally {
